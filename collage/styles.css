@@ -48,10 +48,19 @@ body {
     border: 2px dashed #ccc;
     background: #f9f9f9;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .add-item:hover {
     background: #e9e9e9;
+}
+
+.add-item svg {
+    width: 32px;
+    height: 32px;
+    fill: #666;
 }
 
 #controls {
@@ -91,6 +100,88 @@ body {
     height: 30px;
     border: none;
     cursor: pointer;
+}
+
+.layout-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.layout-btn {
+    background: none;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.layout-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.layout-btn.active {
+    background-color: #ddd;
+    border-color: #999;
+}
+
+.layout-btn svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.transparent-btn {
+    background: none;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.transparent-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.transparent-btn.active {
+    background-color: #ddd;
+    border-color: #999;
+}
+
+.transparent-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+.scaling-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.scaling-btn {
+    background: none;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.scaling-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.scaling-btn.active {
+    background-color: #ddd;
+    border-color: #999;
+}
+
+.scaling-btn svg {
+    width: 24px;
+    height: 24px;
+    display: block;
 }
 
 fieldset {
