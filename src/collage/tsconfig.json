@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2015",
     "lib": ["ES2015", "DOM"],
-    "outFile": "../../collage/app.js",
+    "outFile": "../../tools/collage/app.js",
     "strict": true
   },
   "files": ["app.ts"]
