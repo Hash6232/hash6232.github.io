@@ -33,6 +33,7 @@ const colsInput = document.getElementById('cols');
 const scaleSmallest = document.getElementById('scale-smallest');
 const scaleBiggest = document.getElementById('scale-biggest');
 const letterboxColor = document.getElementById('letterbox-color');
+const colorDisplay = document.getElementById('color-display');
 const transparentBg = document.getElementById('transparent-bg');
 const transparentBtn = document.getElementById('transparent-btn');
 const staticAddItem = document.getElementById('static-add-item');
@@ -41,6 +42,13 @@ const fileInput = document.getElementById('file-input');
 const previewCanvas = document.getElementById('preview');
 const noImagesMessage = document.getElementById('no-images-message');
 const ctx = previewCanvas.getContext('2d');
+// Helper function to calculate luminance
+function getLuminance(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
 // Show/hide controls based on layout
 function updateControls() {
     if (selectedLayout === 'grid') {
@@ -81,10 +89,34 @@ scalingButtons.forEach(btn => {
 });
 // Static add item event listener
 staticAddItem.addEventListener('click', () => fileInput.click());
+// Color display click listener
+colorDisplay.addEventListener('click', () => {
+    if (colorDisplay.classList.contains('disabled'))
+        return;
+    letterboxColor.click();
+});
+// Letterbox color change listener
+letterboxColor.addEventListener('change', () => {
+    colorDisplay.style.backgroundColor = letterboxColor.value;
+    const luminance = getLuminance(letterboxColor.value);
+    if (luminance < 0.5) {
+        colorDisplay.classList.add('dark-bg');
+    }
+    else {
+        colorDisplay.classList.remove('dark-bg');
+    }
+    renderPreview();
+});
 // Transparent button event listener
 transparentBtn.addEventListener('click', () => {
     transparentBg.checked = !transparentBg.checked;
     transparentBtn.classList.toggle('active');
+    if (transparentBg.checked) {
+        colorDisplay.classList.add('disabled');
+    }
+    else {
+        colorDisplay.classList.remove('disabled');
+    }
     renderPreview();
 });
 // Update preview on grid inputs change
@@ -331,8 +363,11 @@ window.addEventListener('load', () => {
             btn.classList.remove('active');
     });
     letterboxColor.value = '#ffffff';
+    colorDisplay.style.backgroundColor = letterboxColor.value;
+    colorDisplay.classList.remove('dark-bg'); // White is light
     transparentBg.checked = false;
     transparentBtn.classList.remove('active');
+    colorDisplay.classList.remove('disabled');
     updateControls();
 });
 // Open preview in new tab on click
