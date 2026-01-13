@@ -3,10 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Collage Maker</title>
+    <title>Image Collage Tool</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-     <script type="module" src="app.js"></script>
+    <div id="controls">
+        <div class="control-group">
+            <label for="layout-select">Layout:</label>
+            <select id="layout-select">
+                <option value="column" selected>Column</option>
+                <option value="row">Row</option>
+                <option value="grid">Grid</option>
+            </select>
+        </div>
+
+        <div id="grid-controls" class="control-group" style="display: none;">
+            <label for="rows">Rows:</label>
+            <input type="number" id="rows" min="1" value="2">
+            <label for="cols">Cols:</label>
+            <input type="number" id="cols" min="1" value="2">
+        </div>
+
+        <div class="control-group">
+            <fieldset>
+                <legend>Scaling:</legend>
+                <input type="radio" id="scale-smallest" name="scaling" value="smallest" checked>
+                <label for="scale-smallest">To smallest</label>
+                <input type="radio" id="scale-biggest" name="scaling" value="biggest">
+                <label for="scale-biggest">To biggest</label>
+            </fieldset>
+        </div>
+
+        <div id="letterbox-controls" class="control-group" style="display: none;">
+            <label for="letterbox-color">Letterbox color:</label>
+            <input type="color" id="letterbox-color" value="#ffffff">
+            <input type="checkbox" id="transparent-bg">
+            <label for="transparent-bg">Transparent</label>
+        </div>
+    </div>
+
+    <div id="image-list">
+        <!-- Thumbnails will be dynamically added here -->
+    </div>
+
+    <input type="file" id="file-input" multiple style="display: none;">
+
+    <div id="no-images-message">No images loaded. Click the + button to add images or paste an image/URL.</div>
+
+    <canvas id="preview" style="display: none;"></canvas>
+
+    <script src="app.js"></script>
 </body>
 </html>
