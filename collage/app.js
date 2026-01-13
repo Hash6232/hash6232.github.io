@@ -59,6 +59,8 @@ rowsInput.addEventListener('change', renderPreview);
 colsInput.addEventListener('change', renderPreview);
 letterboxColor.addEventListener('change', renderPreview);
 transparentBg.addEventListener('change', renderPreview);
+scaleSmallest.addEventListener('change', renderPreview);
+scaleBiggest.addEventListener('change', renderPreview);
 // Initialize controls
 updateControls();
 // File input change
@@ -188,8 +190,7 @@ function renderPreview() {
         previewCanvas.style.display = 'block';
         noImagesMessage.style.display = 'none';
         const layout = layoutSelect.value;
-        const scaleToSmallest = scaleSmallest.checked;
-        const useBiggest = scaleBiggest.checked;
+        const scaleDown = scaleSmallest.checked;
         // Load all images
         const loadedImages = [];
         for (const item of images) {
@@ -203,20 +204,20 @@ function renderPreview() {
         let totalHeight = 0;
         if (layout === 'column') {
             // Uniform width, sum heights
-            totalWidth = Math.min(...loadedImages.map(img => img.width));
+            totalWidth = scaleDown ? Math.min(...loadedImages.map(img => img.width)) : Math.max(...loadedImages.map(img => img.width));
             totalHeight = loadedImages.reduce((sum, img) => sum + img.height * (totalWidth / img.width), 0);
         }
         else if (layout === 'row') {
             // Uniform height, sum widths
-            totalHeight = Math.min(...loadedImages.map(img => img.height));
+            totalHeight = scaleDown ? Math.min(...loadedImages.map(img => img.height)) : Math.max(...loadedImages.map(img => img.height));
             totalWidth = loadedImages.reduce((sum, img) => sum + img.width * (totalHeight / img.height), 0);
         }
         else if (layout === 'grid') {
             const rows = parseInt(rowsInput.value) || 2;
             const cols = parseInt(colsInput.value) || 2;
             const numImages = loadedImages.length;
-            const gridWidth = Math.min(...loadedImages.map(img => img.width));
-            const gridHeight = Math.min(...loadedImages.map(img => img.height));
+            const gridWidth = scaleDown ? Math.min(...loadedImages.map(img => img.width)) : Math.max(...loadedImages.map(img => img.width));
+            const gridHeight = scaleDown ? Math.min(...loadedImages.map(img => img.height)) : Math.max(...loadedImages.map(img => img.height));
             totalWidth = gridWidth * cols;
             totalHeight = gridHeight * rows;
         }
