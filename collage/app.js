@@ -27,33 +27,66 @@ function getImageSize(url) {
     return { width: 800, height: 600 };
 }
 const imageList = document.getElementById('image-list');
-const layoutSelect = document.getElementById('layout-select');
+let selectedLayout = 'column';
 const rowsInput = document.getElementById('rows');
 const colsInput = document.getElementById('cols');
 const scaleSmallest = document.getElementById('scale-smallest');
 const scaleBiggest = document.getElementById('scale-biggest');
 const letterboxColor = document.getElementById('letterbox-color');
 const transparentBg = document.getElementById('transparent-bg');
+const transparentBtn = document.getElementById('transparent-btn');
+const staticAddItem = document.getElementById('static-add-item');
+const gridControls = document.getElementById('grid-controls');
 const fileInput = document.getElementById('file-input');
 const previewCanvas = document.getElementById('preview');
 const noImagesMessage = document.getElementById('no-images-message');
 const ctx = previewCanvas.getContext('2d');
 // Show/hide controls based on layout
 function updateControls() {
-    const layout = layoutSelect.value;
-    const gridControls = document.getElementById('grid-controls');
-    const letterboxControls = document.getElementById('letterbox-controls');
-    if (layout === 'grid') {
+    if (selectedLayout === 'grid') {
         gridControls.style.display = 'flex';
-        letterboxControls.style.display = 'flex';
     }
     else {
         gridControls.style.display = 'none';
-        letterboxControls.style.display = 'none';
     }
     renderPreview();
 }
-layoutSelect.addEventListener('change', updateControls);
+// Layout button event listeners
+const layoutButtons = document.querySelectorAll('.layout-btn');
+layoutButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        layoutButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedLayout = btn.getAttribute('data-layout');
+        updateControls();
+    });
+});
+// Scaling button event listeners
+const scalingButtons = document.querySelectorAll('.scaling-btn');
+scalingButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        scalingButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const scale = btn.getAttribute('data-scale');
+        if (scale === 'smallest') {
+            scaleSmallest.checked = true;
+            scaleBiggest.checked = false;
+        }
+        else {
+            scaleSmallest.checked = false;
+            scaleBiggest.checked = true;
+        }
+        renderPreview();
+    });
+});
+// Static add item event listener
+staticAddItem.addEventListener('click', () => fileInput.click());
+// Transparent button event listener
+transparentBtn.addEventListener('click', () => {
+    transparentBg.checked = !transparentBg.checked;
+    transparentBtn.classList.toggle('active');
+    renderPreview();
+});
 // Update preview on grid inputs change
 rowsInput.addEventListener('change', renderPreview);
 colsInput.addEventListener('change', renderPreview);
@@ -122,7 +155,13 @@ function fetchImage(url) {
 }
 // Render thumbnails
 function renderThumbnails() {
-    imageList.innerHTML = '';
+    // Clear existing thumbnails but keep the static add item
+    const children = Array.from(imageList.children);
+    children.forEach(child => {
+        if (!child.classList.contains('add-item')) {
+            imageList.removeChild(child);
+        }
+    });
     images.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'image-item';
@@ -140,22 +179,10 @@ function renderThumbnails() {
             renderPreview();
         });
         div.appendChild(removeBtn);
-        imageList.appendChild(div);
+        // Insert before the add item
+        const addItem = imageList.querySelector('.add-item');
+        imageList.insertBefore(div, addItem);
     });
-    // Add dummy thumbnail for adding images
-    const addDiv = document.createElement('div');
-    addDiv.className = 'image-item add-item';
-    addDiv.addEventListener('click', () => fileInput.click());
-    const addText = document.createElement('div');
-    addText.textContent = '+';
-    addText.style.display = 'flex';
-    addText.style.alignItems = 'center';
-    addText.style.justifyContent = 'center';
-    addText.style.height = '100%';
-    addText.style.fontSize = '24px';
-    addText.style.color = '#666';
-    addDiv.appendChild(addText);
-    imageList.appendChild(addDiv);
     // Drag and drop reordering (exclude add item)
     imageList.addEventListener('dragover', (e) => e.preventDefault());
     imageList.addEventListener('drop', (e) => {
@@ -164,7 +191,7 @@ function renderThumbnails() {
         if (!targetItem)
             return;
         const fromIndex = parseInt(e.dataTransfer.getData('text'));
-        const toIndex = Array.from(imageList.children).indexOf(targetItem);
+        const toIndex = Array.from(imageList.children).filter(child => !child.classList.contains('add-item')).indexOf(targetItem);
         if (toIndex !== -1 && fromIndex !== toIndex && fromIndex >= 0 && fromIndex < images.length && toIndex >= 0 && toIndex < images.length) {
             const moved = images[fromIndex];
             images.splice(fromIndex, 1);
@@ -189,7 +216,7 @@ function renderPreview() {
         }
         previewCanvas.style.display = 'block';
         noImagesMessage.style.display = 'none';
-        const layout = layoutSelect.value;
+        const layout = selectedLayout;
         const scaleDown = scaleSmallest.checked;
         // Load all images
         const loadedImages = [];
@@ -292,13 +319,20 @@ function renderPreview() {
 }
 // Reset controls on page load
 window.addEventListener('load', () => {
-    layoutSelect.value = 'column';
+    selectedLayout = 'column';
     rowsInput.value = '2';
     colsInput.value = '2';
-    document.getElementById('scale-smallest').checked = true;
-    document.getElementById('scale-biggest').checked = false;
+    scaleSmallest.checked = true;
+    scaleBiggest.checked = false;
+    scalingButtons.forEach(btn => {
+        if (btn.getAttribute('data-scale') === 'smallest')
+            btn.classList.add('active');
+        else
+            btn.classList.remove('active');
+    });
     letterboxColor.value = '#ffffff';
     transparentBg.checked = false;
+    transparentBtn.classList.remove('active');
     updateControls();
 });
 // Open preview in new tab on click

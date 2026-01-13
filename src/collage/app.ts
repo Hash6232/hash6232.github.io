@@ -25,13 +25,16 @@ function getImageSize(url: string): { width: number; height: number } {
     return { width: 800, height: 600 };
 }
 const imageList = document.getElementById('image-list') as HTMLDivElement;
-const layoutSelect = document.getElementById('layout-select') as HTMLSelectElement;
+let selectedLayout = 'column';
 const rowsInput = document.getElementById('rows') as HTMLInputElement;
 const colsInput = document.getElementById('cols') as HTMLInputElement;
 const scaleSmallest = document.getElementById('scale-smallest') as HTMLInputElement;
 const scaleBiggest = document.getElementById('scale-biggest') as HTMLInputElement;
 const letterboxColor = document.getElementById('letterbox-color') as HTMLInputElement;
 const transparentBg = document.getElementById('transparent-bg') as HTMLInputElement;
+const transparentBtn = document.getElementById('transparent-btn') as HTMLButtonElement;
+const staticAddItem = document.getElementById('static-add-item') as HTMLDivElement;
+const gridControls = document.getElementById('grid-controls')!;
 const fileInput = document.getElementById('file-input') as HTMLInputElement;
 const previewCanvas = document.getElementById('preview') as HTMLCanvasElement;
 const noImagesMessage = document.getElementById('no-images-message') as HTMLDivElement;
@@ -39,20 +42,52 @@ const ctx = previewCanvas.getContext('2d')!;
 
 // Show/hide controls based on layout
 function updateControls() {
-    const layout = layoutSelect.value;
-    const gridControls = document.getElementById('grid-controls')!;
-    const letterboxControls = document.getElementById('letterbox-controls')!;
-    if (layout === 'grid') {
+    if (selectedLayout === 'grid') {
         gridControls.style.display = 'flex';
-        letterboxControls.style.display = 'flex';
     } else {
         gridControls.style.display = 'none';
-        letterboxControls.style.display = 'none';
     }
     renderPreview();
 }
 
-layoutSelect.addEventListener('change', updateControls);
+// Layout button event listeners
+const layoutButtons = document.querySelectorAll('.layout-btn');
+layoutButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        layoutButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedLayout = btn.getAttribute('data-layout')!;
+        updateControls();
+    });
+});
+
+// Scaling button event listeners
+const scalingButtons = document.querySelectorAll('.scaling-btn');
+scalingButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        scalingButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const scale = btn.getAttribute('data-scale');
+        if (scale === 'smallest') {
+            scaleSmallest.checked = true;
+            scaleBiggest.checked = false;
+        } else {
+            scaleSmallest.checked = false;
+            scaleBiggest.checked = true;
+        }
+        renderPreview();
+    });
+});
+
+// Static add item event listener
+staticAddItem.addEventListener('click', () => fileInput.click());
+
+// Transparent button event listener
+transparentBtn.addEventListener('click', () => {
+    transparentBg.checked = !transparentBg.checked;
+    transparentBtn.classList.toggle('active');
+    renderPreview();
+});
 
 // Update preview on grid inputs change
 rowsInput.addEventListener('change', renderPreview);
@@ -125,7 +160,14 @@ async function fetchImage(url: string) {
 
 // Render thumbnails
 function renderThumbnails() {
-    imageList.innerHTML = '';
+    // Clear existing thumbnails but keep the static add item
+    const children = Array.from(imageList.children);
+    children.forEach(child => {
+        if (!child.classList.contains('add-item')) {
+            imageList.removeChild(child);
+        }
+    });
+
     images.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'image-item';
@@ -146,25 +188,10 @@ function renderThumbnails() {
         });
         div.appendChild(removeBtn);
 
-        imageList.appendChild(div);
+        // Insert before the add item
+        const addItem = imageList.querySelector('.add-item');
+        imageList.insertBefore(div, addItem);
     });
-
-    // Add dummy thumbnail for adding images
-    const addDiv = document.createElement('div');
-    addDiv.className = 'image-item add-item';
-    addDiv.addEventListener('click', () => fileInput.click());
-
-    const addText = document.createElement('div');
-    addText.textContent = '+';
-    addText.style.display = 'flex';
-    addText.style.alignItems = 'center';
-    addText.style.justifyContent = 'center';
-    addText.style.height = '100%';
-    addText.style.fontSize = '24px';
-    addText.style.color = '#666';
-    addDiv.appendChild(addText);
-
-    imageList.appendChild(addDiv);
 
     // Drag and drop reordering (exclude add item)
     imageList.addEventListener('dragover', (e) => e.preventDefault());
@@ -173,7 +200,7 @@ function renderThumbnails() {
         const targetItem = (e.target as HTMLElement).closest('.image-item:not(.add-item)') as HTMLElement;
         if (!targetItem) return;
         const fromIndex = parseInt(e.dataTransfer!.getData('text'));
-        const toIndex = Array.from(imageList.children).indexOf(targetItem);
+        const toIndex = Array.from(imageList.children).filter(child => !child.classList.contains('add-item')).indexOf(targetItem);
         if (toIndex !== -1 && fromIndex !== toIndex && fromIndex >= 0 && fromIndex < images.length && toIndex >= 0 && toIndex < images.length) {
             const moved = images[fromIndex]!;
             images.splice(fromIndex, 1);
@@ -199,7 +226,7 @@ async function renderPreview() {
     previewCanvas.style.display = 'block';
     noImagesMessage.style.display = 'none';
 
-    const layout = layoutSelect.value;
+    const layout = selectedLayout;
     const scaleDown = scaleSmallest.checked;
 
     // Load all images
@@ -313,13 +340,18 @@ async function renderPreview() {
 
 // Reset controls on page load
 window.addEventListener('load', () => {
-    layoutSelect.value = 'column';
+    selectedLayout = 'column';
     rowsInput.value = '2';
     colsInput.value = '2';
-    (document.getElementById('scale-smallest') as HTMLInputElement).checked = true;
-    (document.getElementById('scale-biggest') as HTMLInputElement).checked = false;
+    scaleSmallest.checked = true;
+    scaleBiggest.checked = false;
+    scalingButtons.forEach(btn => {
+        if (btn.getAttribute('data-scale') === 'smallest') btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
     letterboxColor.value = '#ffffff';
     transparentBg.checked = false;
+    transparentBtn.classList.remove('active');
     updateControls();
 });
 
