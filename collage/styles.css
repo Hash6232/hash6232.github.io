@@ -1,0 +1,155 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    padding: 1rem;
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #ccc;
+}
+
+#controls-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.9rem;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    margin: 0;
+    font-weight: bold;
+}
+
+.control-group select,
+.control-group input {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9rem;
+}
+
+.control-group button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
+}
+
+.control-group input[type="range"] {
+    width: 60px;
+}
+
+.control-group input[type="color"] {
+    width: 30px;
+    height: 30px;
+    border: none;
+    cursor: pointer;
+}
+
+.warning {
+    color: #dc3545;
+    font-weight: bold;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+section {
+    padding: 1rem;
+    overflow: auto;
+}
+
+/* Specific sections */
+#input-controls {
+    flex-shrink: 0;
+}
+
+#image-management {
+    flex: 0 0 30vh;
+    max-height: 30vh;
+    overflow-y: auto;
+}
+
+#thumbnails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.thumbnail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #ccc;
+    padding: 5px;
+    cursor: move;
+    position: relative;
+}
+
+.thumbnail.dragging {
+    opacity: 0.5;
+}
+
+.order-indicator {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.image-wrapper {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.thumbnail img {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: cover;
+}
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin: 2rem 0;
+}
+
+
+

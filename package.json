@@ -1,0 +1,25 @@
+{
+  "name": "hash6232.github.io",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://hash6232.github.io/",
+  "bugs": {
+    "url": "https://github.com/Hash6232/hash6232.github.io/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hash6232/hash6232.github.io.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "build:collage": "tsc -p src/collage",
+    "watch:collage": "tsc -p src/collage -w",
+    "build:all": "npm run build:collage"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

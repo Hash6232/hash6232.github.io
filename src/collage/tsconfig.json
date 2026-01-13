@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "../../collage",
+    "module": "esnext",
+    "target": "es2015",
+    "verbatimModuleSyntax": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["**/*.ts"]
+}
