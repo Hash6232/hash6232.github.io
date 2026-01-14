@@ -147,3 +147,7 @@ vite.config.ts.timestamp-*
 src/**/*plan.md
 src/**/*journal.md
 src/**/*context.md
+src/collage/*.js
+src/collage/*.js.map
+src/collage/*.d.ts
+src/collage/*.d.ts.map

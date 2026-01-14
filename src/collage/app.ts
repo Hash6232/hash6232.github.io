@@ -6,6 +6,32 @@ interface ImageItem {
     name: string;
 }
 
+interface FxTwitterPhoto {
+    type: string;
+    id: string;
+    url: string;
+    width: number;
+    height: number;
+}
+
+interface FxTwitterMedia {
+    all: any[];
+    photos: FxTwitterPhoto[];
+}
+
+interface FxTwitterTweet {
+    url: string;
+    id: string;
+    text: string;
+    media?: FxTwitterMedia;
+}
+
+interface FxTwitterResponse {
+    code: number;
+    message: string;
+    tweet: FxTwitterTweet;
+}
+
 let images: ImageItem[] = [];
 
 // Check if string is valid URL
@@ -16,6 +42,17 @@ function isValidUrl(string: string): boolean {
     } catch {
         return false;
     }
+}
+
+// Check if URL is a Twitter/X status URL
+function isTwitterUrl(url: string): boolean {
+    return /https?:\/\/(?:mobile\.|web\.|tweetdeck\.)?(?:twitter\.com|x\.com)\/[^\/]+\/status\/\d+/.test(url);
+}
+
+// Extract tweet ID from Twitter/X URL
+function extractTweetId(url: string): string | null {
+    const match = url.match(/\/status\/(\d+)/);
+    return match?.[1] || null;
 }
 
 // Get image size (placeholder, loads image)
@@ -166,7 +203,14 @@ document.addEventListener('paste', (e) => {
         }
         const text = e.clipboardData?.getData('text');
         if (text && isValidUrl(text)) {
-            fetchImage(text);
+            if (isTwitterUrl(text)) {
+                const tweetId = extractTweetId(text);
+                if (tweetId) {
+                    fetchTwitterImages(tweetId);
+                }
+            } else {
+                fetchImage(text);
+            }
         }
     }
 });
@@ -185,6 +229,59 @@ function addImage(blob: Blob, name?: string) {
     images.push(item);
     renderThumbnails();
     renderPreview();
+}
+
+// Fetch Twitter images from fxTwitter API
+async function fetchTwitterImages(tweetId: string) {
+    try {
+        const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            if (response.status === 404) {
+                alert('Tweet not found or private');
+            } else {
+                alert('Error fetching tweet data');
+            }
+            return;
+        }
+        const data: FxTwitterResponse = await response.json();
+        const photos = data.tweet.media?.photos;
+        if (!photos || photos.length === 0) {
+            alert('No images found in this tweet');
+            return;
+        }
+        // Fetch all photos concurrently
+        const fetchPromises = photos.map(photo => fetch(photo.url));
+        const results = await Promise.allSettled(fetchPromises);
+
+        // Get blobs for successful fetches
+        const blobPromises = results.map(async (result: PromiseSettledResult<Response>, index: number) => {
+            if (result.status === 'fulfilled' && result.value.ok) {
+                return await result.value.blob();
+            }
+            return null;
+        });
+        const blobs = await Promise.all(blobPromises);
+
+        // Filter successful blobs and add as images in order
+        const successfulBlobs = blobs.filter((blob: Blob | null) => blob !== null) as Blob[];
+        if (successfulBlobs.length === 0) {
+            alert('Failed to load any images from this tweet');
+            return;
+        }
+
+        // Add all images at once to maintain order and atomic UI update
+        const newItems: ImageItem[] = successfulBlobs.map(blob => ({
+            blob,
+            url: URL.createObjectURL(blob),
+            name: 'twitter-image'
+        }));
+        images.push(...newItems);
+        renderThumbnails();
+        renderPreview();
+    } catch (error) {
+        alert('Error fetching Twitter images: ' + error);
+    }
 }
 
 // Fetch image from URL
