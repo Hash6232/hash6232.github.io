@@ -32,7 +32,7 @@ const rowsInput = document.getElementById('rows');
 const colsInput = document.getElementById('cols');
 const scaleSmallest = document.getElementById('scale-smallest');
 const scaleBiggest = document.getElementById('scale-biggest');
-const letterboxColor = document.getElementById('letterbox-color');
+const backgroundColor = document.getElementById('background-color');
 const colorDisplay = document.getElementById('color-display');
 const transparentBg = document.getElementById('transparent-bg');
 const transparentBtn = document.getElementById('transparent-btn');
@@ -93,12 +93,12 @@ staticAddItem.addEventListener('click', () => fileInput.click());
 colorDisplay.addEventListener('click', () => {
     if (colorDisplay.classList.contains('disabled'))
         return;
-    letterboxColor.click();
+    backgroundColor.click();
 });
-// Letterbox color change listener
-letterboxColor.addEventListener('change', () => {
-    colorDisplay.style.backgroundColor = letterboxColor.value;
-    const luminance = getLuminance(letterboxColor.value);
+// Background color change listener
+backgroundColor.addEventListener('change', () => {
+    colorDisplay.style.backgroundColor = backgroundColor.value;
+    const luminance = getLuminance(backgroundColor.value);
     if (luminance < 0.5) {
         colorDisplay.classList.add('dark-bg');
     }
@@ -122,7 +122,7 @@ transparentBtn.addEventListener('click', () => {
 // Update preview on grid inputs change
 rowsInput.addEventListener('change', renderPreview);
 colsInput.addEventListener('change', renderPreview);
-letterboxColor.addEventListener('change', renderPreview);
+backgroundColor.addEventListener('change', renderPreview);
 transparentBg.addEventListener('change', renderPreview);
 scaleSmallest.addEventListener('change', renderPreview);
 scaleBiggest.addEventListener('change', renderPreview);
@@ -289,6 +289,11 @@ function renderPreview() {
         }
         previewCanvas.width = totalWidth;
         previewCanvas.height = totalHeight;
+        // Fill canvas with background color if not transparent
+        if (!transparentBg.checked) {
+            ctx.fillStyle = backgroundColor.value;
+            ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+        }
         // Scale for display to fit viewport
         const maxW = window.innerWidth * 0.8;
         const maxH = window.innerHeight * 0.6;
@@ -316,26 +321,17 @@ function renderPreview() {
                 const cellHeight = totalHeight / rows;
                 drawWidth = cellWidth;
                 drawHeight = cellHeight;
-                // Letterboxing
+                // Adjust image size for cell
                 const imgAspect = img.width / img.height;
                 const cellAspect = cellWidth / cellHeight;
                 if (imgAspect > cellAspect) {
-                    // Fit width, letterbox height
+                    // Fit width
                     drawHeight = cellWidth / imgAspect;
-                    // Fill background
-                    const bgColor = transparentBg.checked ? 'transparent' : letterboxColor.value;
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect((index % cols) * cellWidth, Math.floor(index / cols) * cellHeight, cellWidth, cellHeight);
                 }
                 else if (imgAspect < cellAspect) {
-                    // Fit height, letterbox width
+                    // Fit height
                     drawWidth = cellHeight * imgAspect;
-                    // Fill background
-                    const bgColor = transparentBg.checked ? 'transparent' : letterboxColor.value;
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect((index % cols) * cellWidth, Math.floor(index / cols) * cellHeight, cellWidth, cellHeight);
                 }
-                // If aspect matches, no fill needed
                 x = (index % cols) * cellWidth + (cellWidth - drawWidth) / 2;
                 y = Math.floor(index / cols) * cellHeight + (cellHeight - drawHeight) / 2;
             }
@@ -362,8 +358,8 @@ window.addEventListener('load', () => {
         else
             btn.classList.remove('active');
     });
-    letterboxColor.value = '#ffffff';
-    colorDisplay.style.backgroundColor = letterboxColor.value;
+    backgroundColor.value = '#ffffff';
+    colorDisplay.style.backgroundColor = backgroundColor.value;
     colorDisplay.classList.remove('dark-bg'); // White is light
     transparentBg.checked = false;
     transparentBtn.classList.remove('active');
