@@ -156,6 +156,10 @@ document.addEventListener('paste', (e) => {
 });
 // Add image to list
 function addImage(blob, name) {
+    if (!blob.type.startsWith('image/')) {
+        alert('Please upload image files only.');
+        return;
+    }
     const item = {
         blob,
         url: URL.createObjectURL(blob),
