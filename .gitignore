@@ -41,9 +41,9 @@ build/Release
 node_modules
 
 # Build outputs - keep compiled JS, ignore debugging artifacts
-collage/*.js.map
-collage/*.d.ts
-collage/*.d.ts.map/
+tools/**/*.js.map
+tools/**/*.d.ts
+tools/**/*.d.ts.map
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
