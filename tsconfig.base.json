@@ -1,5 +1,4 @@
 {
-  "exclude": ["src/**/*"],
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
@@ -8,9 +7,9 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    // "module": "nodenext",  // Override in each project
     "target": "esnext",
-    "types": [],
+    // "types": [],  // Override in each project
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -35,11 +34,11 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
+    // "jsx": "react-jsx",  // Override in each project if needed
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
+    "skipLibCheck": true
   }
 }
