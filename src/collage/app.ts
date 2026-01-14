@@ -30,10 +30,12 @@ const rowsInput = document.getElementById('rows') as HTMLInputElement;
 const colsInput = document.getElementById('cols') as HTMLInputElement;
 const scaleSmallest = document.getElementById('scale-smallest') as HTMLInputElement;
 const scaleBiggest = document.getElementById('scale-biggest') as HTMLInputElement;
+const scaleCrop = document.getElementById('scale-crop') as HTMLInputElement;
 const backgroundColor = document.getElementById('background-color') as HTMLInputElement;
 const colorDisplay = document.getElementById('color-display') as HTMLDivElement;
 const transparentBg = document.getElementById('transparent-bg') as HTMLInputElement;
 const transparentBtn = document.getElementById('transparent-btn') as HTMLButtonElement;
+const cropBtn = document.getElementById('crop-btn') as HTMLButtonElement;
 const staticAddItem = document.getElementById('static-add-item') as HTMLDivElement;
 const gridControls = document.getElementById('grid-controls')!;
 const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -53,8 +55,10 @@ function getLuminance(hex: string): number {
 function updateControls() {
     if (selectedLayout === 'grid') {
         gridControls.style.display = 'flex';
+        cropBtn.style.display = 'block';
     } else {
         gridControls.style.display = 'none';
+        cropBtn.style.display = 'none';
     }
     renderPreview();
 }
@@ -71,21 +75,28 @@ layoutButtons.forEach(btn => {
 });
 
 // Scaling button event listeners
-const scalingButtons = document.querySelectorAll('.scaling-btn');
-scalingButtons.forEach(btn => {
+const scaleModeButtons = document.querySelectorAll('.scaling-btn[data-scale]');
+scaleModeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-        scalingButtons.forEach(b => b.classList.remove('active'));
+        scaleModeButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const scale = btn.getAttribute('data-scale');
         if (scale === 'smallest') {
             scaleSmallest.checked = true;
             scaleBiggest.checked = false;
-        } else {
+        } else if (scale === 'biggest') {
             scaleSmallest.checked = false;
             scaleBiggest.checked = true;
         }
         renderPreview();
     });
+});
+
+// Crop button event listener
+cropBtn.addEventListener('click', () => {
+    scaleCrop.checked = !scaleCrop.checked;
+    cropBtn.classList.toggle('active');
+    renderPreview();
 });
 
 // Static add item event listener
@@ -327,6 +338,7 @@ async function renderPreview() {
     loadedImages.forEach((img, index) => {
         let drawWidth = img.width;
         let drawHeight = img.height;
+        let drawn = false;
 
         if (layout === 'column') {
             drawWidth = totalWidth;
@@ -342,22 +354,46 @@ async function renderPreview() {
             drawWidth = cellWidth;
             drawHeight = cellHeight;
 
-            // Adjust image size for cell
+        if (scaleCrop.checked) {
+            // Crop to fill cell (zoom in and crop from center)
+            const cellAspect = cellWidth / cellHeight;
+            const imgAspect = img.width / img.height;
+
+            let sx, sy, sw, sh;
+
+            if (imgAspect > cellAspect) {
+                sh = img.height;
+                sw = img.height * cellAspect;
+                sx = (img.width - sw) / 2;
+                sy = 0;
+            } else {
+                sw = img.width;
+                sh = img.width / cellAspect;
+                sx = 0;
+                sy = (img.height - sh) / 2;
+            }
+
+            x = (index % cols) * cellWidth;
+            y = Math.floor(index / cols) * cellHeight;
+            ctx.drawImage(img, sx, sy, sw, sh, x, y, cellWidth, cellHeight);
+            drawn = true;
+        } else {
+            // Fit to cell
             const imgAspect = img.width / img.height;
             const cellAspect = cellWidth / cellHeight;
             if (imgAspect > cellAspect) {
-                // Fit width
                 drawHeight = cellWidth / imgAspect;
             } else if (imgAspect < cellAspect) {
-                // Fit height
                 drawWidth = cellHeight * imgAspect;
             }
-
             x = (index % cols) * cellWidth + (cellWidth - drawWidth) / 2;
             y = Math.floor(index / cols) * cellHeight + (cellHeight - drawHeight) / 2;
         }
+        }
 
-        ctx.drawImage(img, x, y, drawWidth, drawHeight);
+        if (!drawn) {
+            ctx.drawImage(img, x, y, drawWidth, drawHeight);
+        }
 
         if (layout === 'column') {
             y += drawHeight;
@@ -378,7 +414,9 @@ window.addEventListener('load', () => {
     colsInput.value = '2';
     scaleSmallest.checked = true;
     scaleBiggest.checked = false;
-    scalingButtons.forEach(btn => {
+    scaleCrop.checked = false;
+    cropBtn.classList.remove('active');
+    scaleModeButtons.forEach(btn => {
         if (btn.getAttribute('data-scale') === 'smallest') btn.classList.add('active');
         else btn.classList.remove('active');
     });
