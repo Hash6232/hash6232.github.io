@@ -1,5 +1,11 @@
 // app.ts - Main TypeScript for Image Collage Tool
+var MessageState;
+(function (MessageState) {
+    MessageState["ORIGINAL"] = "No images loaded. Click the + button to add images or paste an image/URL (also supports Twitter/X tweets).";
+    MessageState["LOADING"] = "Fetching images from Twitter...";
+})(MessageState || (MessageState = {}));
 let images = [];
+let isLoadingTwitter = false;
 // Check if string is valid URL
 function isValidUrl(string) {
     try {
@@ -188,6 +194,8 @@ function addImage(blob, name) {
 // Fetch Twitter images from fxTwitter API
 async function fetchTwitterImages(tweetId) {
     try {
+        isLoadingTwitter = true;
+        noImagesMessage.textContent = MessageState.LOADING;
         const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
         const response = await fetch(apiUrl);
         if (!response.ok) {
@@ -234,6 +242,10 @@ async function fetchTwitterImages(tweetId) {
     }
     catch (error) {
         alert('Error fetching Twitter images: ' + error);
+    }
+    finally {
+        isLoadingTwitter = false;
+        noImagesMessage.textContent = MessageState.ORIGINAL;
     }
 }
 // Fetch image from URL
@@ -311,6 +323,7 @@ async function renderPreview() {
         previewCanvas.style.width = '0px';
         previewCanvas.style.height = '0px';
         previewCanvas.style.display = 'none';
+        noImagesMessage.textContent = isLoadingTwitter ? MessageState.LOADING : MessageState.ORIGINAL;
         noImagesMessage.style.display = 'block';
         return;
     }

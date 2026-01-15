@@ -32,7 +32,13 @@ interface FxTwitterResponse {
     tweet: FxTwitterTweet;
 }
 
+enum MessageState {
+    ORIGINAL = "No images loaded. Click the + button to add images or paste an image/URL (also supports Twitter/X tweets).",
+    LOADING = "Fetching images from Twitter..."
+}
+
 let images: ImageItem[] = [];
+let isLoadingTwitter = false;
 
 // Check if string is valid URL
 function isValidUrl(string: string): boolean {
@@ -234,6 +240,8 @@ function addImage(blob: Blob, name?: string) {
 // Fetch Twitter images from fxTwitter API
 async function fetchTwitterImages(tweetId: string) {
     try {
+        isLoadingTwitter = true;
+        noImagesMessage.textContent = MessageState.LOADING;
         const apiUrl = `https://api.fxtwitter.com/status/${tweetId}`;
         const response = await fetch(apiUrl);
         if (!response.ok) {
@@ -281,6 +289,9 @@ async function fetchTwitterImages(tweetId: string) {
         renderPreview();
     } catch (error) {
         alert('Error fetching Twitter images: ' + error);
+    } finally {
+        isLoadingTwitter = false;
+        noImagesMessage.textContent = MessageState.ORIGINAL;
     }
 }
 
@@ -364,6 +375,7 @@ async function renderPreview() {
         previewCanvas.style.width = '0px';
         previewCanvas.style.height = '0px';
         previewCanvas.style.display = 'none';
+        noImagesMessage.textContent = isLoadingTwitter ? MessageState.LOADING : MessageState.ORIGINAL;
         noImagesMessage.style.display = 'block';
         return;
     }
