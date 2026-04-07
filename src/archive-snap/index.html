@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive Snap</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: none;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-color: #e7d9d8;
+            background-image: repeating-conic-gradient(
+                #f9f8f3 0% 25%,
+                #e7d9d8 0% 50%
+            );
+            background-size: 300px 300px;
+            transform: rotate(45deg) scale(1.5);
+            z-index: -1;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            color: #974b4f;
+        }
+
+        h1 a {
+            color: #974b4f;
+            text-decoration: none;
+        }
+
+        h1 a:hover {
+            color: #7a3e40;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .reset-btn {
+            background: #fefefe;
+            color: #974b4f;
+            border: 2px solid #974b4f;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #f1ece8;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 42px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .card-slot {
+            aspect-ratio: 3/4;
+            background: #974b4f;
+            border: 4px solid #fefefe;
+            box-shadow: 0 0 0 1px #b0aeac;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10%;
+            transition: all 0.2s;
+            overflow: hidden;
+            transform: rotate(var(--rotation));
+        }
+
+        .card-slot.empty {
+            justify-content: center;
+            padding-top: 0;
+        }
+
+        .card-slot.empty .empty-label {
+            color: #f1ece8;
+            font-size: 3rem;
+        }
+
+        .card-slot:hover {
+            transform: scale(1.05) rotate(var(--rotation));
+        }
+
+        .card-slot.filled {
+            background: #fefefe;
+        }
+
+        .card-slot .character-image {
+            width: 80%;
+            height: 70%;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+            border: 3px solid #fefefe;
+            box-shadow: 0 0 0 1px #b0aeac;
+        }
+
+        .card-slot .character-name {
+            font-size: 0.85rem;
+            color: #974b4f;
+            text-align: center;
+            padding: 0 4px;
+            line-height: 1.2;
+            font-weight: bold;
+        }
+
+        .card-slot .name-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        }
+        }
+
+        .empty-label {
+            color: #f1ece8;
+            font-size: 3rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #f9f8f3;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 525px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal h2 {
+            margin: 0;
+            color: #974b4f;
+        }
+
+        .clear-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #974b4f;
+            color: #fefefe;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .clear-btn:hover {
+            background: #7a3e40;
+        }
+
+        .character-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .character-option {
+            background: #fefefe;
+            border: 4px solid #fefefe;
+            box-shadow: 0 0 0 1px #b0aeac;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 90px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .character-option img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .character-option:hover {
+            border-color: #974b4f;
+            transform: scale(1.05);
+        }
+
+        .character-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .character-option.disabled:hover {
+            border-color: #fefefe;
+            transform: none;
+        }
+
+        .character-option .name {
+            font-size: 0.85rem;
+            color: #974b4f;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .placeholder-card {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            
+            .character-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1><a href="https://bluearchive.wiki/wiki/Winter_Skies_Renaissance_%EF%BD%9EOn_Wholesome_Cultural_Exchange%EF%BD%9E" target="_blank" rel="noopener">Archive Snap</a></h1>
+    
+    <div class="controls">
+        <button class="reset-btn" onclick="resetBoard()">Reset Board</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Select Character</h2>
+            </div>
+            <button class="clear-btn" onclick="clearSlot()">Clear</button>
+            <div class="character-list" id="characterList"></div>
+        </div>
+    </div>
+
+    <script>
+        const characters = [
+            { id: 'yakumo', name: 'Yakumo', image: 'https://static.wikitide.net/bluearchivewiki/b/ba/Yakumo.png' },
+            { id: 'takane', name: 'Takane', image: 'https://static.wikitide.net/bluearchivewiki/0/0a/Takane.png' },
+            { id: 'minori', name: 'Minori', image: 'https://static.wikitide.net/bluearchivewiki/1/1a/Minori.png' },
+            { id: 'nodoka', name: 'Nodoka', image: 'https://static.wikitide.net/bluearchivewiki/e/e1/Nodoka.png' },
+            { id: 'tomoe', name: 'Tomoe', image: 'https://static.wikitide.net/bluearchivewiki/0/0a/Tomoe.png' },
+            { id: 'red-winter-guard', name: 'Red Winter Guard', image: 'https://static.kivo.wiki/images/students/%E7%BA%A2%E5%86%AC%E6%99%AE%E9%80%9A%E5%AD%A6%E7%94%9FA/avatar.png' }
+        ];
+
+        const slots = new Array(12).fill(null);
+
+        let selectedSlotIndex = null;
+
+        function init() {
+            characters.forEach(char => {
+                const img = new Image();
+                img.src = char.image;
+            });
+            renderGrid();
+            renderCharacterPicker();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            const rotations = [3, -3, 3, -3, -3, -3, -3, 3, -3, 3, -3, 3];
+
+            slots.forEach((slot, index) => {
+                const card = document.createElement('div');
+                card.className = 'card-slot';
+                card.style.setProperty('--rotation', rotations[index] + 'deg');
+
+                if (slot) {
+                    card.classList.add('filled');
+
+                    const char = characters.find(c => c.id === slot.characterId);
+                    if (char) {
+                        const img = document.createElement('img');
+                        img.className = 'character-image';
+                        img.src = char.image;
+                        card.appendChild(img);
+
+                        const nameContainer = document.createElement('div');
+                        nameContainer.className = 'name-container';
+                        
+                        const nameLabel = document.createElement('span');
+                        nameLabel.className = 'character-name';
+                        nameLabel.textContent = char.name;
+                        nameContainer.appendChild(nameLabel);
+                        card.appendChild(nameContainer);
+                    }
+                } else {
+                    card.classList.add('empty');
+                    const emptyLabel = document.createElement('span');
+                    emptyLabel.className = 'empty-label';
+                    emptyLabel.textContent = '+';
+                    card.appendChild(emptyLabel);
+                }
+
+                card.addEventListener('click', () => handleSlotClick(index));
+                grid.appendChild(card);
+            });
+        }
+
+        function renderCharacterPicker() {
+            const list = document.getElementById('characterList');
+            list.innerHTML = '';
+
+            const charCounts = {};
+            characters.forEach(char => {
+                charCounts[char.id] = slots.filter(s => s && s.characterId === char.id).length;
+            });
+
+            characters.forEach(char => {
+                const isDisabled = charCounts[char.id] >= 2;
+                const option = document.createElement('div');
+                option.className = 'character-option' + (isDisabled ? ' disabled' : '');
+
+                const img = document.createElement('img');
+                img.src = char.image;
+                option.appendChild(img);
+
+                const name = document.createElement('div');
+                name.className = 'name';
+                name.textContent = char.name;
+                option.appendChild(name);
+
+                if (!isDisabled) {
+                    option.addEventListener('click', () => selectCharacter(char.id));
+                }
+                list.appendChild(option);
+            });
+        }
+
+        function handleSlotClick(index) {
+            selectedSlotIndex = index;
+            renderCharacterPicker();
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function selectCharacter(characterId) {
+            if (selectedSlotIndex !== null) {
+                slots[selectedSlotIndex] = { characterId: characterId };
+                selectedSlotIndex = null;
+                document.getElementById('modalOverlay').classList.remove('active');
+                renderGrid();
+            }
+        }
+
+        function clearSlot() {
+            if (selectedSlotIndex !== null) {
+                slots[selectedSlotIndex] = null;
+                selectedSlotIndex = null;
+                document.getElementById('modalOverlay').classList.remove('active');
+                renderGrid();
+            }
+        }
+
+        function resetBoard() {
+            for (let i = 0; i < 12; i++) {
+                slots[i] = null;
+            }
+            renderGrid();
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modalOverlay')) {
+                selectedSlotIndex = null;
+                document.getElementById('modalOverlay').classList.remove('active');
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
