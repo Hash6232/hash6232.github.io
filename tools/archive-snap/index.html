@@ -329,11 +329,49 @@
             { id: 'red-winter-guard', name: 'Red Winter Guard', image: 'https://static.kivo.wiki/images/students/%E7%BA%A2%E5%86%AC%E6%99%AE%E9%80%9A%E5%AD%A6%E7%94%9FA/avatar.png' }
         ];
 
-        const slots = new Array(12).fill(null);
+        let slots = new Array(12).fill(null);
 
         let selectedSlotIndex = null;
 
+        function saveBoard() {
+            try {
+                localStorage.setItem('archive-snap-board', JSON.stringify(slots));
+            } catch (e) {
+                // Storage full or unavailable - ignore
+            }
+        }
+
+        function loadBoard() {
+            try {
+                const saved = localStorage.getItem('archive-snap-board');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    
+                    if (!Array.isArray(parsed) || parsed.length !== 12) {
+                        return;
+                    }
+                    
+                    const validIds = characters.map(c => c.id);
+                    for (const slot of parsed) {
+                        if (slot !== null) {
+                            if (typeof slot !== 'object' || !slot.characterId) {
+                                return;
+                            }
+                            if (!validIds.includes(slot.characterId)) {
+                                return;
+                            }
+                        }
+                    }
+                    
+                    slots = parsed;
+                }
+            } catch (e) {
+                // Invalid JSON - use default
+            }
+        }
+
         function init() {
+            loadBoard();
             characters.forEach(char => {
                 const img = new Image();
                 img.src = char.image;
@@ -426,6 +464,7 @@
                 slots[selectedSlotIndex] = { characterId: characterId };
                 selectedSlotIndex = null;
                 document.getElementById('modalOverlay').classList.remove('active');
+                saveBoard();
                 renderGrid();
             }
         }
@@ -435,6 +474,7 @@
                 slots[selectedSlotIndex] = null;
                 selectedSlotIndex = null;
                 document.getElementById('modalOverlay').classList.remove('active');
+                saveBoard();
                 renderGrid();
             }
         }
@@ -443,6 +483,7 @@
             for (let i = 0; i < 12; i++) {
                 slots[i] = null;
             }
+            saveBoard();
             renderGrid();
         }
 
