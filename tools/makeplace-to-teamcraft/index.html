@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MakePlace → Teamcraft</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@400;500&display=swap');
+
+  :root {
+    --bg:       #0d1117;
+    --surface:  #161b22;
+    --border:   #2a3140;
+    --accent:   #c89b4e;
+    --accent2:  #8ecae6;
+    --text:     #e6edf3;
+    --muted:    #7d8590;
+    --success:  #3fb950;
+    --error:    #f85149;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem 2.5rem 2rem;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .logo svg { flex-shrink: 0; }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    line-height: 1.25;
+    color: var(--accent);
+  }
+
+  h1 span { color: var(--accent2); }
+
+  .subtitle {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.over {
+    border-color: var(--accent);
+    background: rgba(200,155,78,.05);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .drop-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .drop-text {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .drop-text strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .file-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+
+  #status {
+    margin-top: 1.25rem;
+    min-height: 1.2rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+    transition: color .2s;
+  }
+
+  #status.ok  { color: var(--success); }
+  #status.err { color: var(--error);   }
+
+  #stats {
+    display: none;
+    margin-top: 1.25rem;
+    background: rgba(0,0,0,.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 2;
+  }
+
+  #stats .stat { display: flex; justify-content: space-between; }
+  #stats .stat b { color: var(--text); font-weight: 500; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #0d1117;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+
+  .btn:hover  { opacity: .88; }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  .url-row {
+    display: none;
+    margin-top: 1rem;
+    gap: 0.5rem;
+    flex-direction: column;
+  }
+
+  .url-row label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .url-box {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .url-box input {
+    flex: 1;
+    background: rgba(0,0,0,.4);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 0.45rem 0.7rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .2s, border-color .2s;
+  }
+
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  footer {
+    margin-top: 2rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  footer a { color: var(--accent2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="36" height="36" rx="8" fill="#1f2937"/>
+      <path d="M18 6 L28 11 L28 25 L18 30 L8 25 L8 11 Z" stroke="#c89b4e" stroke-width="1.5" fill="none"/>
+      <path d="M18 6 L18 30 M8 11 L28 25 M28 11 L8 25" stroke="#c89b4e" stroke-width="0.75" opacity="0.45"/>
+      <circle cx="18" cy="18" r="3" fill="#8ecae6"/>
+    </svg>
+    <div>
+      <h1>MakePlace <span>→ Teamcraft</span></h1>
+      <div class="subtitle">Housing list importer</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".json">
+    <span class="drop-icon">🏠</span>
+    <div class="drop-text"><strong>Click to browse</strong> or drag &amp; drop</div>
+    <div class="file-hint">MakePlace save file (.json)</div>
+  </div>
+
+  <div id="status">Awaiting your save file…</div>
+
+  <div id="stats">
+    <div class="stat"><span>Interior furniture</span><b id="s-inf">—</b></div>
+    <div class="stat"><span>Interior fixtures</span><b id="s-infix">—</b></div>
+    <div class="stat"><span>Exterior furniture</span><b id="s-outf">—</b></div>
+    <div class="stat"><span>Exterior fixtures</span><b id="s-outfix">—</b></div>
+    <div class="stat"><span>Dyes</span><b id="s-dye">—</b></div>
+    <div class="stat"><span>Unique item IDs</span><b id="s-uniq">—</b></div>
+  </div>
+
+  <button class="btn" id="openBtn" disabled>Open in Teamcraft</button>
+
+  <div class="url-row" id="urlRow">
+    <label>Import URL</label>
+    <div class="url-box">
+      <input type="text" id="urlDisplay" readonly>
+      <button class="copy-btn" id="copyBtn">Copy</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Original script by <a href="https://deafbun.carrd.co" target="_blank">Petra Ulstrad</a> · Original source code @ <a href="https://github.com/DeafBun/Makeplace-To-Teamcraft">github.com</a> · Web port vibecoded by <a href="https://claude.ai">claude.ai</a>
+</footer>
+
+<script>
+// ─── DYE MAP ──────────────────────────────────────────────────────────────────
+const DYE_MAP = {
+  '312D57FF': '5804', '8E581BFF': '5755', '5F7558FF': '5782', 'A2875CFF': '5753',
+  '9BB363FF': '5778', 'ACA8A2FF': '5730', '6A4B37FF': '5746', '913B27FF': '5742',
+  'EBD3A0FF': '5762', '658241FF': '5779', 'FEF864FF': '30118', '96BDB9FF': '5785',
+  '4F5766FF': '5794', '484742FF': '5733', 'F5379BFF': '30117', '3D290DFF': '5757',
+  '6E3D24FF': '5747', 'BC8804FF': '5767', 'DC9BCAFF': '5811', 'CC6C5EFF': '5741',
+  'C99156FF': '5750', '8E9BACFF': '5793', 'F2D770FF': '5768', '322C3BFF': '5807',
+  '781A1AFF': '5738', '121F2DFF': '8740', '28211CFF': '8736', '152C2CFF': '8738',
+  '232026FF': '8742', '321919FF': '8735', '1E2A21FF': '5784', 'DBB457FF': '5764',
+  '000EA2FF': '30120', '514560FF': '5806', 'B9A489FF': '5758', '898784FF': '5731',
+  '3B2A3DFF': '5809', 'A58430FF': '5769', 'FAC62BFF': '5765', '284B2CFF': '5780',
+  'B2C4CEFF': '5788', '1A1F27FF': '5796', 'B79EBCFF': '5808', '1E1E1EFF': '8733',
+  '30211BFF': '5749', '877FAEFF': '5805', '836969FF': '5736', 'ABB054FF': '5773',
+  '3F3329FF': '5761', 'FECEF5FF': '5810', '323621FF': '5777', '8B9C63FF': '5775',
+  '7D3906FF': '5745', '181937FF': '5802', 'E49E34FF': '5766', '615245FF': '5760',
+  '1F4646FF': '5787', '707326FF': '5774', '585230FF': '5771', '3B4D3CFF': '5783',
+  '406339FF': '5781', '4B5232FF': '5776', '7B5C2DFF': '5752', '644216FF': '5752',
+  '2F5889FF': '5756', '96A4D9FF': '8739', 'BACFAAFF': '8737', 'FDC8C6FF': '8734',
+  'BBB5DAFF': '8741', '3B6886FF': '5791', '79526CFF': '5812', 'C57424FF': '5754',
+  'F9F8F4FF': '8732', '996E3FFF': '5751', '403311FF': '5770', '5B7FC0FF': '5797',
+  '66304EFF': '5813', '1C3D54FF': '5792', '5B1729FF': '5737', 'E69F96FF': '5735',
+  '273067FF': '5801', 'E40011FF': '30116', '4F2D1FFF': '5748', '622207FF': '5739',
+  'E4AA8AFF': '5743', '6481A0FF': '5790', '373747FF': '5803', '92816CFF': '5759',
+  '83B0D2FF': '5789', '656565FF': '5732', 'E4DFD0FF': '5729', '2B2923FF': '5734',
+  '234172FF': '5799', 'B75C2DFF': '5744', 'BBBB8AFF': '5772', '04AFCDFF': '30121',
+  '437272FF': '5786', 'B7A370FF': '5763', 'FBF1B4FF': '30119', '112944FF': '5800',
+  '451511FF': '5740', '2F3851FF': '5795'
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function extractFromJson(obj, path) {
+  function extract(o, p, idx, arr) {
+    const key = p[idx];
+    if (idx + 1 < p.length) {
+      if (Array.isArray(o)) { if (!o.length) arr.push(null); else o.forEach(i => extract(i, p, idx, arr)); }
+      else if (o && typeof o === 'object') { key in o ? extract(o[key], p, idx + 1, arr) : arr.push(null); }
+      else arr.push(null);
+    } else {
+      if (Array.isArray(o)) { if (!o.length) arr.push(null); else o.forEach(i => arr.push(i && typeof i === 'object' ? (i[key] ?? null) : null)); }
+      else if (o && typeof o === 'object') arr.push(o[key] ?? null);
+      else arr.push(null);
+    }
+    return arr;
+  }
+  if (Array.isArray(obj)) { const out = []; obj.forEach(i => out.push(extract(i, path, 0, []))); return out; }
+  return extract(obj, path, 0, []);
+}
+
+function setStatus(msg, type = '') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type;
+}
+
+// ─── MAIN CONVERSION ─────────────────────────────────────────────────────────
+function convert(data) {
+  const url = 'https://ffxivteamcraft.com/import/';
+
+  const insideFurniture  = data.interiorFurniture  || [];
+  const outsideFurniture = data.exteriorFurniture  || [];
+  const insideFixtures   = data.interiorFixture    || [];
+  const outsideFixtures  = data.exteriorFixture    || [];
+  const houseSize        = data.houseSize;
+
+  // Furniture/fixture IDs
+  const insideFurnitureIds  = insideFurniture.filter(Boolean).map(i => i.itemId).filter(id => id !== 0);
+  const outsideFurnitureIds = outsideFurniture.filter(Boolean).map(i => i.itemId).filter(id => id !== 0);
+  const insideFixtureIds    = insideFixtures.filter(Boolean).map(i => i.itemId);
+  const outsideFixtureIds   = outsideFixtures.filter(Boolean).map(i => i.itemId);
+
+  // Dyes
+  const dyelistrawIN  = extractFromJson(data, ['interiorFurniture',  'properties', 'color']);
+  const dyelistrawOUT = extractFromJson(data, ['exteriorFurniture',  'properties', 'color']);
+
+  // Blank-wall extra material IDs
+  const bwDataRaw = extractFromJson(data, ['interiorFurniture', 'properties', 'material', 'itemId']);
+  const bwIdList  = bwDataRaw.flat().filter(i => i != null && i !== 0);
+
+  // Attachment groups
+  const groupIN       = extractFromJson(data, ['interiorFurniture',  'attachments', 'itemId']);
+  const groupColorIN  = extractFromJson(data, ['interiorFurniture',  'attachments', 'properties', 'color']);
+  const groupOUT      = extractFromJson(data, ['exteriorFurniture',  'attachments', 'itemId']);
+  const groupColorOUT = extractFromJson(data, ['exteriorFurniture',  'attachments', 'properties', 'color']);
+
+  const extraIN    = groupIN.flat().filter(i => i != null && i !== 0);
+  const extraOUT   = groupOUT.flat().filter(i => i != null && i !== 0);
+  const colorIN    = groupColorIN.flat().filter(i => i != null && i !== 0);
+  const colorOUT   = groupColorOUT.flat().filter(i => i != null && i !== 0);
+
+  // Build dye ID list
+  // JSON stores color as RRGGBB00 (alpha=00); dye map keys use RRGGBBFF — normalise before lookup
+  const normalizeColor = c => (typeof c === 'string' && c.length === 8) ? c.slice(0, 6) + 'FF' : c;
+  const allColors = [...dyelistrawIN, ...dyelistrawOUT, ...colorIN, ...colorOUT]
+    .flat().filter(Boolean).map(normalizeColor);
+  const dyeIDs = allColors.map(c => DYE_MAP[c]).filter(Boolean);
+
+  // Count everything
+  const counter = {};
+  const add = id => { const k = String(id); counter[k] = (counter[k] || 0) + 1; };
+
+  // Inside furniture (sorted)
+  [...insideFurnitureIds, ...extraIN].sort().forEach(add);
+
+  // Inside fixtures — filter all zero IDs (district markers, placeholder doors)
+  const fixSorted = insideFixtureIds.filter(i => i !== 0).sort((a, b) => a - b);
+  fixSorted.forEach(add);
+
+  // Outside (only if not Apartment)
+  if (houseSize !== 'Apartment') {
+    [...outsideFurnitureIds, ...extraOUT].sort().forEach(add);
+    outsideFixtureIds.filter(i => i !== 0).sort().forEach(add);
+  }
+
+  dyeIDs.forEach(add);
+  bwIdList.forEach(add);
+
+  // Build import string
+  const keys = Object.keys(counter);
+  const parts = keys.map((k, i) => `${k},null,${counter[k]}${i < keys.length - 1 ? ';' : ''}`);
+  const preEncoded = parts.join('');
+
+  const encoded = btoa(unescape(encodeURIComponent(preEncoded)));
+  const finalUrl = url + encoded;
+
+  // Stats — counts reflect what actually entered the counter
+  const dyeCount = new Set(dyeIDs).size;
+  document.getElementById('s-inf').textContent    = insideFurnitureIds.length + extraIN.length;
+  document.getElementById('s-infix').textContent  = fixSorted.length;
+  document.getElementById('s-outf').textContent   = houseSize === 'Apartment' ? 'N/A (Apt)' : outsideFurnitureIds.length + extraOUT.length;
+  document.getElementById('s-outfix').textContent = houseSize === 'Apartment' ? 'N/A (Apt)' : outsideFixtureIds.filter(i => i !== 0).length;
+  document.getElementById('s-dye').textContent    = dyeCount;
+  document.getElementById('s-uniq').textContent   = keys.length;
+
+  return finalUrl;
+}
+
+// ─── UI WIRING ───────────────────────────────────────────────────────────────
+let finalUrl = null;
+
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const openBtn   = document.getElementById('openBtn');
+const urlRow    = document.getElementById('urlRow');
+const urlDisplay = document.getElementById('urlDisplay');
+const copyBtn   = document.getElementById('copyBtn');
+const statsEl   = document.getElementById('stats');
+
+function handleFile(file) {
+  if (!file || !file.name.endsWith('.json')) {
+    setStatus('Please drop a .json MakePlace save file.', 'err');
+    return;
+  }
+  setStatus(`Reading "${file.name}"…`);
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      finalUrl = convert(data);
+      statsEl.style.display = 'block';
+      urlRow.style.display  = 'flex';
+      urlDisplay.value = finalUrl;
+      openBtn.disabled = false;
+      setStatus('Ready! ' + file.name + ' parsed successfully.', 'ok');
+    } catch (err) {
+      setStatus('Failed to parse file: ' + err.message, 'err');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+openBtn.addEventListener('click', () => { if (finalUrl) window.open(finalUrl, '_blank'); });
+
+copyBtn.addEventListener('click', () => {
+  if (!finalUrl) return;
+  navigator.clipboard.writeText(finalUrl).then(() => {
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+  });
+});
+</script>
+</body>
+</html>
